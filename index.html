@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+  <title>Elliptic Curve Plotter</title>
+</head>
+
+<body>
+  <script type="module" src="d3.js"></script>
+
+  <div class="controls">
+    <label>a: <input id="a" type="number" step="1" value="-1"></label>
+    <label>b: <input id="b" type="number" step="1" value="0"></label>
+    <label>p: <input id="p" type="number" step="1" value="5" min="3"></label>
+    <button id="draw">Plot</button>
+  </div>
+
+  <div id="stuff">
+    <svg id="svg" style="background-color: #f9f9f9; border-radius: 5px; padding-left: 10px">
+      <defs>
+        <clipPath id="surround">
+            <rect x="-30" y="-10" width="700" height="590" fill="pink"></rect>
+        </clipPath>
+      </defs>
+    </svg>
+
+    <div id="infobox" class="boxed">
+      <div class="boxed">Left click to select a point. Right click another point to add it to your selected point.</div>
+      <div id="notes" class="typeset" style="width: fit-content; background-color: palevioletred;"></div>
+      <div id="topbox" class="hidden">
+        <div id="activebox" class="boxed typeset" style="width: fit-content;"></div>
+        <label>k: <input id="k" type="number" step="1" value="3" min="2"></label>
+        <button id="mult" style="padding: 2px; margin: 2px;">Calculate kP</button>
+      </div>
+      <div id="subgroup" class="boxed typset" style="display: block;"></div>
+      <hr class="hidden"/>
+      <div id="addbox" class="boxed typeset"></div>
+    </div>
+  </div>
+
+  <div id="tooltip" class="tooltip" style="visibility:  hidden;"></div>
+</body>
+
+</html>
