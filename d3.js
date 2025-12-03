@@ -1,16 +1,17 @@
 import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 import * as field from './fields.js'
+import * as util from "./util.js";
 
 "use strict";
 
-const width = 700;
+const width = 800;
 const height = 600;
+const maxTicks = 33;
 
-const margin = { top: 40, bottom: 36, right: 16, left: 24 };
+const margin = { top: 8, bottom: 30, right: 8, left: 24 };
 const innerW = width - margin.left - margin.right;
 const innerH = height - margin.top - margin.bottom;
 
-const maxTicks = 35;
 
 const tooltip = d3.select("#tooltip");
 
@@ -20,15 +21,6 @@ const svg = d3.select("#svg")
 
 const graph = svg.append("g")
   .attr("transform", `translate(${margin.left},${margin.top})`)
-  .attr('clip-path', 'url(#surround)');
-
-// graph.append('rect')
-//   .attr('x', -30)
-//   .attr('y', -8)
-//   .attr('width', width - 2)
-//   .attr('height', height - 10)
-//   .attr('fill', 'pink');
-
 const gx = graph.append("g")
   .attr("id", 'x-axis')
   .attr("transform", `translate(0,${innerH})`)
@@ -38,19 +30,10 @@ const gy = graph.append("g")
 
 const lines = graph.append("g")
   .attr('id', 'lines');
-
 const ptsGroup = graph.append("g")
   .attr("id", "points")
 
-const eqn = svg.append("g")
-  .attr("transform", `translate(${margin.left},${margin.top / 2})`)
-  .append("text")
-  .classed('typeset', true)
-  .attr('id', 'eqn')
-  .attr("x", 6).attr("y", 6)
-  .attr("font-size", 12)
-  .text('');
-
+const eqn = d3.select('#eqn');
 const xs = d3.scaleLinear().range([0, innerW]);
 const ys = d3.scaleLinear().range([innerH, 0]);
 
@@ -82,16 +65,20 @@ function init(p) {
   return { tr, ticks, xAxis, yAxis };
 }
 
+const typesetNode = (node, text) => {
+  MathJax.typesetClear([node.node()]);
+  node.text(text);
+  MathJax.typesetPromise([node.node()]);
+}
+
 function drawAxes(tr, xAxis, yAxis) {
-  tr(gx)
-    .call(xAxis)
+  tr(gx).call(xAxis)
     .selectAll(".tick:not(:first-of-type) line")
     .attr('class', 'grid-line')
     .attr('y1', -1)
     .attr('y2', -1 * innerH);
 
-  tr(gy)
-    .call(yAxis)
+  tr(gy).call(yAxis)
     .selectAll(".tick:not(:first-of-type) line")
     .attr('class', 'grid-line')
     .attr('x1', 1)
@@ -105,7 +92,7 @@ const notes = d3.select('#notes');
 
 function drawField(a, b, p) {
   if (!changed(a, b, p)) return;
-  console.clear();
+  // console.clear();
 
   const { tr, ticks, xAxis, yAxis } = init(p);
   drawAxes(tr, xAxis, yAxis);
@@ -130,18 +117,15 @@ function drawField(a, b, p) {
       e => tr(e).attr('r', 0).remove())
     .on('click', e => selectPoint(e.currentTarget))
     .on('contextmenu', (e, pt) => { e.preventDefault(); addPoint(selectedPoint?.datum(), pt) })
-    .call(mouseEvents);
+    .on("mouseover.ttip", (evt, pt) => tooltip.style("visibility", "visible")
+      .style('opacity', '100')
+      .call(ttip, d3.pointer(evt, document.body))
+      .text(pt))
+    .on("mousemove.ttip", evt => tooltip.call(ttip, d3.pointer(evt, document.body)))
+    .on("mouseout.ttip", () => tooltip.style("visibility", 'hidden').style('opacity', '0'));
 
-  eqn.text(`y² \u2261 x³ ${coeff(a, 'x')} ${coeff(b, '')} (mod ${p})`);
+  typesetNode(eqn, `\\(y^2 \\equiv x^3 ${coeff(a, 'x')} ${coeff(b, '')}\\pmod{${p}}\\)`);
 }
-
-const mouseEvents = el => el.on("mouseover.ttip", (evt, pt) =>
-  tooltip.style("visibility", "visible")
-    .style('opacity', '100')
-    .call(ttip, d3.pointer(evt, document.body))
-    .text(pt))
-  .on("mousemove.ttip", evt => tooltip.call(ttip, d3.pointer(evt, document.body)))
-  .on("mouseout.ttip", () => tooltip.style("visibility", 'hidden').style('opacity', '0'))
 
 const ttip = (t, [mx, my]) => t.style("left", `${mx + 8}px`).style("top", `${my - 4}px`)
 function coeff(co, term) {
@@ -178,7 +162,7 @@ function selectPoint(target = null) {
   selectedPoint = d3.select(target);
   selectedPoint.classed('active', true);
 
-  const group = Array.from(selectedPoint.datum().generate());
+  const group = selectedPoint.datum().group();
   const groupstr = `\\(${group.join('\\to')}\\)`
   // console.log(groupstr);
   topbox.classed('hidden', false);
@@ -199,9 +183,7 @@ async function addPoint(P, Q, write = true) {
   const sum = P.plus(Q);
   if (write) {
     hr.classed('hidden', false);
-    MathJax.typesetClear([addbox.node()]);
-    addbox.text(`\\(${P} + ${Q} = ${sum}\\)`)
-    MathJax.typesetPromise([addbox.node()]);
+    typesetNode(addbox, `\\(${P} + ${Q} = ${sum}\\)`);
   }
 
   lines.selectAll('*').interrupt().remove();
@@ -240,10 +222,10 @@ async function addPoint(P, Q, write = true) {
     return sum;
   }
 
-  const eps = 1e-5;
+  const EPSILON = 1e-6;
   const negSum = sum.negate();
   let curr = Q.asObj();
-  const m = slope(P, Q);
+  const m = util.slope(P, Q);
   const ends = [];
   const rev = P.x > Q.x;
   let end;
@@ -253,18 +235,17 @@ async function addPoint(P, Q, write = true) {
   sumPoint = ptsGroup.selectAll('circle').filter(d => d.equals(sum));
   negSumPoint = ptsGroup.selectAll('circle').filter(d => d.equals(negSum));
 
-  const min = 0;
-  const maxim = field.p();
+  const max = field.p();
   let flag = Q.equals(negSum);
 
   for (let i = 0; i < 100; i++) {
-    let xP = rev ? min - curr.x : maxim - curr.x;
+    let xP = rev ? -curr.x : max - curr.x;
     let yc = curr.y + (m * xP);
-    if (yc < (min + eps)) xP = xAtY(curr, m, min) - curr.x;
-    else if (yc > (maxim - eps)) xP = xAtY(curr, m, maxim) - curr.x;
+    if (yc < EPSILON) xP = util.xAtY(curr, m, 0) - curr.x;
+    else if (yc > max - EPSILON) xP = util.xAtY(curr, m, max) - curr.x;
     end = { x: curr.x + xP, y: curr.y + (m * xP) };
 
-    if (!flag && inline(curr, end, negSum)) {
+    if (!flag && util.inline(curr, end, negSum)) {
       // console.log(`inline after ${i}`, curr, end)
       end = { x: negSum.x, y: negSum.y };
       ends.push([curr, end]);
@@ -275,8 +256,8 @@ async function addPoint(P, Q, write = true) {
 
     // console.log(curr, end);
     let { x: nx, y: ny } = end;
-    if (nx < (min + eps) || nx >= maxim - eps) nx = maxim - nx;
-    if (ny < (min + eps) || ny >= maxim - eps) ny = maxim - ny;
+    if (nx < EPSILON || nx >= max - EPSILON) nx = max - nx;
+    if (ny < EPSILON || ny >= max - EPSILON) ny = max - ny;
     curr = { x: nx, y: ny };
   }
 
@@ -334,13 +315,9 @@ async function multiply(P, n) {
   clearSums();
   const bits = n.toString(2).substring(1);
   let res = P;
-  console.log(bits);
+  // console.log(bits);
   let str = `${n}P &= ${nP}:`
-  const typeset = () => {
-    MathJax.typesetClear([addbox.node()]);
-    addbox.text(`\\(\\begin{align*}${str}\\end{align*}\\)`);
-    MathJax.typesetPromise([addbox.node()]);
-  };
+  const typeset = () => typesetNode(addbox, `\\(\\begin{align*}${str}\\end{align*}\\)`)
   typeset();
   let k = 1;
   for (const bit of bits) {
@@ -357,29 +334,6 @@ async function multiply(P, n) {
       await new Promise(r => setTimeout(r, 2000));
     }
   }
-}
-
-function xAtY(p, m, y) {
-  let c = p.y - m * p.x;
-  return (y - c) / m;
-}
-
-function slope(P, Q) {
-  if (P.equals(Q)) return field.slope(P, P);
-  else if (P.x === Q.x) return +Infinity;
-  else return (Q.y - P.y) / (Q.x - P.x);
-}
-
-function dist(P, Q) {
-  return Math.sqrt((P.x - Q.x) ** 2 + (P.y - Q.y) ** 2);
-}
-
-function inline(A, B, C) {
-  return dist(A, C) + dist(B, C) - dist(A, B) <= 1e-9;
-}
-
-function fEq(x, y) {
-  return Math.abs(x - y) <= 1e-6;
 }
 
 const inputs = ['a', 'b', 'p'].map(id => document.getElementById(id));

@@ -21,24 +21,25 @@
   </div>
 
   <div id="stuff">
-    <svg id="svg" style="background-color: #f9f9f9; border-radius: 5px; padding-left: 10px">
+    <svg id="svg" style="background-color: #f9f9f9; border-radius: 5px; padding: 10px 10px 0px">
       <defs>
         <clipPath id="surround">
-            <rect x="-30" y="-10" width="700" height="590" fill="pink"></rect>
+          <rect x="-30" y="-10" width="700" height="590" fill="pink"></rect>
         </clipPath>
       </defs>
     </svg>
 
     <div id="infobox" class="boxed">
+      <div id="eqn"></div>
       <div class="boxed">Left click to select a point. Right click another point to add it to your selected point.</div>
       <div id="notes" class="typeset" style="width: fit-content; background-color: palevioletred;"></div>
-      <div id="topbox" class="hidden">
-        <div id="activebox" class="boxed typeset" style="width: fit-content;"></div>
+      <div id="topbox" class="hidden" style="margin: 0px; padding: 0px;">
+        <div id="activebox" class="boxed typeset" style="width: fit-content; "></div>
         <label>k: <input id="k" type="number" step="1" value="3" min="2"></label>
         <button id="mult" style="padding: 2px; margin: 2px;">Calculate kP</button>
       </div>
       <div id="subgroup" class="boxed typset" style="display: block;"></div>
-      <hr class="hidden"/>
+      <hr class="hidden" />
       <div id="addbox" class="boxed typeset"></div>
     </div>
   </div>

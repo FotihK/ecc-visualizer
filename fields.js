@@ -12,7 +12,9 @@ const params = {
 const cache = {
   sqrt: [],
   inv: [],
-  points: []
+  points: [],
+  groups: new Map(),
+  best: undefined
 };
 
 const a = () => params.a;
@@ -27,14 +29,23 @@ const isPrime = () => primes.has(params.p);
 const isSingular = () => reduce((4 * params.a * params.a * params.a) + (27 * params.b * params.b)) !== 0;
 const points = () => cache.points;
 const find = (x, y) => cache.points.find(p => p.x === x && p.y === y)
+const bestPrimitive = () => {
+  if (cache.best) return cache.best;
+
+  let best = {len: -1, pt: null};
+  for (const pt of cache.points) {
+    const group = pt.group();
+    if (group.length > best.len) best = {len: group.length, pt};
+  }
+  cache.best = best.pt;
+  return best.pt;
+}
 
 function slope(P, Q) {
   if (P.equals(Q)) return reduce(reduce(3 * P.x * P.x + params.a) * inverse(2 * P.y));
   if (P.x === Q.x) return +Infinity;
   return reduce((Q.y - P.y) * inverse(Q.x - P.x));
 }
-
-
 
 function init(a = 2, b = 3, p = 7) {
   params.a = a;
@@ -44,6 +55,8 @@ function init(a = 2, b = 3, p = 7) {
   cache.sqrt = Array(p).fill(-1);
   cache.inv = Array(p);
   cache.points = [];
+  cache.groups = new Map();
+  cache.best = undefined;
 
   for (let i = 0; i < p; i++) {
     if (i <= p / 2) cache.sqrt[i * i % p] = i;
@@ -79,12 +92,18 @@ class pt {
     this.y = y;
   }
 
+  static fromString(str) {
+    if (str === '\\mathcal{O}') return new pt();
+    let [x, y] = str.split(',');
+    return new pt(Number(x.slice(1)), Number(y.slice(0, -1)))
+  }
+
   copy() {
     return new pt(this.x, this.y);
   }
 
   asObj() {
-    return {x: this.x, y: this.y};
+    return { x: this.x, y: this.y };
   }
 
   isInfinity() {
@@ -126,14 +145,19 @@ class pt {
     return new pt(this.x, negate(this.y));
   }
 
-  *generate() {
+  group() {
+    const cached = cache.groups.get(this.toString());
+    if (cached) return cached;
+
+    const group = [];
     let next = this;
     do {
-      yield next;
+      group.push(next);
       next = next.plus(this);
     } while (!next.isNaN() && !next.equals(this));
-    return;
+    cache.groups.set(this.toString(), group);
+    return group;
   }
 }
 
-export { a, b, p, params, reduce, negate, isPrime, isSingular, points, find, slope, init, pt };
+export { a, b, p, params, reduce, negate, isPrime, isSingular, points, find, slope, init, pt, bestPrimitive };
