@@ -5,6 +5,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <script defer src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
   <title>Elliptic Curve Plotter</title>
@@ -13,11 +14,20 @@
 <body>
   <script type="module" src="app.js"></script>
 
-  <div class="controls">
-    <label>a: <input id="a" type="number" step="1" value="-1"></label>
-    <label>b: <input id="b" type="number" step="1" value="0"></label>
-    <label>p: <input id="p" type="number" step="1" value="5" min="3"></label>
-    <button id="draw">Plot</button>
+  <div id="titlebox">
+    <div id="title">
+      <h2>Elliptic Curve Arithmetic Visualizer</h2>
+      <h5>by Fotih Karimov</h5>
+    </div>
+    <div class="controls">
+      <label>a: <input id="a" type="number" step="1" value="-1"></label>
+      <label>b: <input id="b" type="number" step="1" value="0"></label>
+      <label>p: <input id="p" type="number" step="1" value="5" min="3"></label>
+      <button id="draw">Plot</button>
+    </div>
+    <div id="attr">
+      <a href="https://github.com/FotihK/ecc-visualizer"><i class="fa fa-github" style="font-size: 2rem;"></i></a>
+    </div>
   </div>
 
   <div id="stuff">
@@ -31,8 +41,8 @@
 
     <div id="infobox" class="boxed">
       <div id="eqn"></div>
+      <div id="notes" class="typeset" style="width: fit-content; background-color: palevioletred; padding: 0.5em; font-weight: bold;"></div>
       <div class="boxed">Left click to select a point. Right click another point to add it to your selected point.</div>
-      <div id="notes" class="typeset" style="width: fit-content; background-color: palevioletred;"></div>
       <div id="topbox" class="hidden" style="margin: 0px; padding: 0px;">
         <div id="activebox" class="boxed typeset" style="width: fit-content; "></div>
         <label>k: <input id="k" type="number" step="1" value="3" min="2"></label>

@@ -98,11 +98,13 @@ function drawField(a, b, p) {
   drawAxes(tr, xAxis, yAxis);
 
   field.init(a, b, p);
-  if (!field.isPrime()) notes.classed('hidden', false).text('p is not prime!');
-  else if (!field.isSingular()) notes.classed('hidden', false).text('this field is non-singular!');
+  if (!field.isPrime()) notes.classed('hidden', false).text('p is not prime! Operations may not always be valid in a non-prime field.');
+  else if (field.isSingular()) notes.classed('hidden', false).text('This curve is not non-singular!');
   else notes.classed('hidden', true).text('');
   points = field.points().slice(1);
   scale = ticks / (field.p() - 1);
+
+  typesetNode(eqn, `\\(E: y^2 \\equiv x^3 ${coeff(a, 'x')} ${coeff(b, '')}\\pmod{${p}}\\quad \\#E=${points.length + 1}\\)`);
 
   ptsGroup.selectAll("circle.point")
     .data(points, pt => pt.toString())
@@ -124,7 +126,6 @@ function drawField(a, b, p) {
     .on("mousemove.ttip", evt => tooltip.call(ttip, d3.pointer(evt, document.body)))
     .on("mouseout.ttip", () => tooltip.style("visibility", 'hidden').style('opacity', '0'));
 
-  typesetNode(eqn, `\\(y^2 \\equiv x^3 ${coeff(a, 'x')} ${coeff(b, '')}\\pmod{${p}}\\)`);
 }
 
 const ttip = (t, [mx, my]) => t.style("left", `${mx + 8}px`).style("top", `${my - 4}px`)
@@ -272,8 +273,8 @@ async function addPoint(P, Q, write = true) {
       .attr('y2', d => ys(d[0].y))
       .transition()
       .ease(d3.easeQuad)
-      .delay((d, i) => 1000 + 250 * i)
-      .duration(200)
+      .delay((d, i) => 1200 + 50 * i - 300 / (i + 1))
+      .duration((d, i) => 300 / (i + 1))
       .attr('x2', d => xs(d[1].x))
       .attr('y2', d => ys(d[1].y))
       .end();
@@ -309,7 +310,7 @@ async function addPoint(P, Q, write = true) {
 }
 
 async function multiply(P, n) {
-  if (!P || n < 2) return;
+  if (!P || n < 0) return;
   hr.classed('hidden', false);
   const nP = P.times(n);
   clearSums();

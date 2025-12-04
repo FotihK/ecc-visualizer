@@ -5,8 +5,17 @@ body {
   background-color: #eaeaea;
 }
 
+#titlebox {
+  display: flex;
+  justify-content: space-between;
+  margin: 2em 25% 1em 12%;
+}
+
+#title * {
+  margin: auto;
+  padding: auto;
+}
 .controls {
-  margin-left: 30%;
   display: flex;
   gap: 8px;
   flex-wrap: wrap;

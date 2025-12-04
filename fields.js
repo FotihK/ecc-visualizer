@@ -26,7 +26,7 @@ const inverse = (x) => cache.inv[reduce(x)];
 const negate = (x) => reduce(params.p - x);
 
 const isPrime = () => primes.has(params.p);
-const isSingular = () => reduce((4 * params.a * params.a * params.a) + (27 * params.b * params.b)) !== 0;
+const isSingular = () => reduce((4 * params.a * params.a * params.a) + (27 * params.b * params.b)) === 0;
 const points = () => cache.points;
 const find = (x, y) => cache.points.find(p => p.x === x && p.y === y)
 const bestPrimitive = () => {
